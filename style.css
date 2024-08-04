@@ -1,0 +1,121 @@
+body {
+    margin: 0;
+    padding: 0;
+    padding-top: 30px;
+    font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body:focus {
+    outline: none;
+} 
+
+.container {
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+}
+
+#tablebingo {
+    margin: 12rem;
+    border-collapse: collapse;
+    height: 25rem;
+    width: 25rem;
+    text-align: center;
+    font-size: 22pt;
+    cursor: pointer;
+}
+
+#tablebingo td {
+    padding: 0.3rem;
+}
+
+.cellformat {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20%;
+    border: 0.5px solid lightgray;
+}
+
+.cellformat:hover {
+    background-color: lightgray;
+}
+
+.letterdiv {
+    height: 20vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.letterbingo {
+    padding: 0 1.3rem;
+    font-size: 40pt;
+    display: none;
+}
+
+.strikeout {
+    text-decoration:line-through;
+    color: gray;
+    font-size: 18pt;
+    pointer-events: none;
+}
+
+.showbingo {
+    display: inline;
+}
+
+/* .display {
+    display: none;
+} */
+
+/* .headdd {
+    color: darkblue;
+    width: 300px;
+} */
+
+#msg {
+    color: darkblue;
+    font-size: 5vmin;
+    height: 3rem;
+    width: 10rem;
+    text-align: center;
+}
+
+.msg-container {
+    height: 100vmin;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 4rem;
+    margin-bottom: 10rem;
+}
+
+.hide {
+    display: none;
+}
+
+#new-btn {
+    padding: 1rem 2rem;
+    background-color: #4CAF50;
+    color: aliceblue;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+    border-radius: 10px;
+}
+
+#new-btn:hover {
+    background-color: #45a049;
+}
+
+#new-btn:active {
+    background-color: #3e8e41;
+}
+
+#new-btn:focus {
+    outline: none;
+}
