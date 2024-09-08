@@ -1,3 +1,5 @@
+# BINGO!
+
 <a href="https://persuasivepost.github.io/bingo/">Click here </a>
 
 This project is a Bingo game developed using HTML, CSS, and JavaScript. 
