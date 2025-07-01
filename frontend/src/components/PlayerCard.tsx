@@ -26,20 +26,20 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     <div className="bg-white p-4 rounded-lg shadow-md">
       {/* Player Info */}
       <div className="text-center mb-4">
-        <h3 className="text-lg font-bold text-gray-900">
+        <h3 className="text-lg font-bold text-gray-800">
           {player.name}
           {isCurrentPlayer && (
-            <span className="ml-2 text-blue-600 text-sm font-bold">(You)</span>
+            <span className="ml-2 text-blue-500 text-sm">(You)</span>
           )}
         </h3>
         {isCurrentTurn && (
-          <p className="text-sm text-green-700 font-bold">Current Turn</p>
+          <p className="text-sm text-green-600 font-semibold">Current Turn</p>
         )}
       </div>
 
       {/* BINGO Progress */}
       <div className="mb-4">
-        <h4 className="text-sm font-bold text-gray-800 mb-2 text-center">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 text-center">
           BINGO Progress
         </h4>
         <div className="flex justify-center space-x-2">
@@ -62,11 +62,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       </div>
 
       {/* Stats */}
-      <div className="text-center text-sm text-gray-800">
-        <p className="font-semibold">
-          Marked Cells: {player.markedCells.length}/25
-        </p>
-        <p className="font-semibold">Lines Completed: {player.bingoCounts}/5</p>
+      <div className="text-center text-xs text-gray-600">
+        <p>Marked Cells: {player.markedCells.length}/24</p>
+        <p>Lines Completed: {player.bingoCounts}/5</p>
       </div>
     </div>
   );

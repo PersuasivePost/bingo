@@ -189,14 +189,12 @@ export const useGame = () => {
 
       // Add timeout to prevent infinite loading
       const timeout = setTimeout(async () => {
-        console.log(
-          "WebSocket room creation timed out, trying REST API fallback"
-        );
+        console.log("WebSocket room creation timed out, trying REST API fallback");
         try {
-          const response = await fetch("http://localhost:3001/api/game/rooms", {
-            method: "POST",
+          const response = await fetch('http://localhost:3001/api/game/rooms', {
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
           });
@@ -207,9 +205,7 @@ export const useGame = () => {
           if (result.success && result.data) {
             setRoom(result.data.room);
             setCurrentPlayer(result.data.player);
-            setGameMessage(
-              `Room "${result.data.room.name}" created successfully!`
-            );
+            setGameMessage(`Room "${result.data.room.name}" created successfully!`);
             setError("");
           } else {
             setError("Failed to create room via REST API");
