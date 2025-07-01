@@ -28,13 +28,16 @@ export class GameService {
     const roomId = uuidv4();
     const playerId = uuidv4();
 
+    const board = this.bingoEngine.generateBoard();
+    const markedCells = new Set<number>();
+
     const player: Player = {
       id: playerId,
       name: createRoomDto.playerName,
       socketId: '',
       isReady: false,
-      board: this.bingoEngine.generateBoard(),
-      markedCells: new Set<number>(),
+      board: board,
+      markedCells: markedCells,
       bingoCounts: 0,
     };
 
@@ -48,6 +51,7 @@ export class GameService {
       gameStarted: false,
       maxPlayers: 4,
       createdAt: new Date(),
+      winner: undefined,
     };
 
     this.rooms.set(roomId, room);
@@ -91,13 +95,17 @@ export class GameService {
     }
 
     const playerId = uuidv4();
+
+    const board = this.bingoEngine.generateBoard();
+    const markedCells = new Set<number>();
+
     const player: Player = {
       id: playerId,
       name: joinRoomDto.playerName,
       socketId: '',
       isReady: false,
-      board: this.bingoEngine.generateBoard(),
-      markedCells: new Set<number>(),
+      board: board,
+      markedCells: markedCells,
       bingoCounts: 0,
     };
 
@@ -192,7 +200,7 @@ export class GameService {
   }
 
   /**
-   * Make a move in the game
+   * Make a move in the game - marks the called number on ALL players' boards
    */
   makeMove(
     roomId: string,
@@ -203,6 +211,7 @@ export class GameService {
     error?: string;
     gameResult?: GameResult;
     bingoAchieved?: boolean;
+    winnerPlayer?: Player;
   } {
     const room = this.rooms.get(roomId);
 
@@ -227,44 +236,61 @@ export class GameService {
       return { success: false, error: 'Not your turn' };
     }
 
-    // Make the move
-    const { isValid, cellIndex } = this.bingoEngine.markCell(
-      player.board,
-      player.markedCells,
-      cellNumber,
-    );
-
-    if (!isValid) {
-      return { success: false, error: 'Invalid move' };
+    // Check if the current player has this number on their board
+    if (!player.board.includes(cellNumber)) {
+      return { success: false, error: 'Number not on your board' };
     }
 
-    // Check for bingo
-    const { hasBingo, totalBingos } = this.bingoEngine.checkForBingo(
-      player.markedCells,
-    );
+    // Check if this number was already called
+    if (player.markedCells.has(cellNumber)) {
+      return { success: false, error: 'Number already called' };
+    }
 
+    // Mark this number on ALL players' boards (if they have it)
     let bingoAchieved = false;
-    if (hasBingo && totalBingos > player.bingoCounts) {
-      player.bingoCounts = totalBingos;
-      bingoAchieved = true;
-    }
+    let winnerPlayer: Player | null = null;
 
-    // Check for game win
-    if (this.bingoEngine.hasWon(player.markedCells)) {
+    room.players.forEach((p) => {
+      if (p.board.includes(cellNumber)) {
+        p.markedCells.add(cellNumber);
+
+        // Check for bingo for this player
+        const { hasBingo, totalBingos } = this.bingoEngine.checkForBingo(
+          p.markedCells,
+          p.board,
+        );
+
+        if (hasBingo && totalBingos > p.bingoCounts) {
+          p.bingoCounts = totalBingos;
+          bingoAchieved = true;
+
+          // Check for game win (5 bingos = winner)
+          if (totalBingos >= 5 && !winnerPlayer) {
+            winnerPlayer = p;
+          }
+        }
+      }
+    });
+
+    // If someone won, end the game
+    if (winnerPlayer !== null) {
       room.gameState = GameState.FINISHED;
+      room.winner = winnerPlayer; // Set the winner on the room
+
+      const winner = winnerPlayer as Player;
 
       const gameResult: GameResult = {
-        winnerId: player.id,
-        winnerName: player.name,
+        winnerId: winner.id,
+        winnerName: winner.name,
         gameStats: {
-          totalMoves: Array.from(player.markedCells).length,
+          totalMoves: Array.from(winner.markedCells).length,
           gameDuration: Date.now() - room.createdAt.getTime(),
         },
       };
 
-      this.logger.log(`Game won by ${player.name} in room ${roomId}`);
+      this.logger.log(`Game won by ${winner.name} in room ${roomId}`);
 
-      return { success: true, gameResult, bingoAchieved };
+      return { success: true, gameResult, bingoAchieved, winnerPlayer: winner };
     }
 
     // Move to next player
@@ -283,9 +309,10 @@ export class GameService {
       return { success: false, error: 'Room not found' };
     }
 
-    // Reset all players
+    // Reset all players with new boards
     room.players.forEach((player) => {
-      player.board = this.bingoEngine.generateBoard();
+      const newBoard = this.bingoEngine.generateBoard();
+      player.board = newBoard;
       player.markedCells = new Set<number>();
       player.bingoCounts = 0;
       player.isReady = false;
@@ -294,6 +321,7 @@ export class GameService {
     room.gameStarted = false;
     room.gameState = GameState.WAITING;
     room.currentPlayerIndex = 0;
+    room.winner = undefined; // Clear the winner field
 
     this.logger.log(`Game reset in room ${roomId}`);
 

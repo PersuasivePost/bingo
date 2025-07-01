@@ -132,6 +132,7 @@ export class GameController {
       players: Array.from(room.players.values()).map((player) =>
         this.formatPlayer(player),
       ),
+      winner: room.winner ? this.formatPlayer(room.winner) : null,
       createdAt: room.createdAt,
     };
   }

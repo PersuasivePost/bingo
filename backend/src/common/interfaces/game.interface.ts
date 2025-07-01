@@ -18,6 +18,7 @@ export interface Room {
   gameStarted: boolean;
   maxPlayers: number;
   createdAt: Date;
+  winner?: Player;
 }
 
 export enum GameState {

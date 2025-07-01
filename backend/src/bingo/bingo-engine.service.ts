@@ -26,7 +26,9 @@ export class BingoEngineService {
    */
   generateBoard(): number[] {
     // Create array [1, 2, 3, ..., 25]
-    let array = Array.from({ length: 25 }, (_, i) => i + 1);
+    const array = Array.from({ length: 25 }, (_, i) => i + 1);
+
+    // Shuffle the array
     return this.shuffleArray(array);
   }
 
@@ -53,7 +55,10 @@ export class BingoEngineService {
   /**
    * Check if a board has any bingo (winning line)
    */
-  checkForBingo(markedCells: Set<number>): {
+  checkForBingo(
+    markedCells: Set<number>,
+    board?: number[],
+  ): {
     hasBingo: boolean;
     newBingos: number[];
     totalBingos: number;
@@ -61,9 +66,23 @@ export class BingoEngineService {
     const newBingos: number[] = [];
     let totalBingos = 0;
 
+    // Convert markedCells (numbers) to positions (indices) for checking
+    const markedPositions = new Set<number>();
+    if (board) {
+      markedCells.forEach((cellNumber) => {
+        const position = board.findIndex((num) => num === cellNumber);
+        if (position !== -1) {
+          markedPositions.add(position);
+        }
+      });
+    } else {
+      // Fallback: assume markedCells are already positions
+      markedCells.forEach((pos) => markedPositions.add(pos));
+    }
+
     this.WINNING_POSITIONS.forEach((combination, index) => {
       const isComplete = combination.every((position) =>
-        markedCells.has(position),
+        markedPositions.has(position),
       );
 
       if (isComplete) {
@@ -89,19 +108,19 @@ export class BingoEngineService {
   ): { isValid: boolean; cellIndex: number } {
     const cellIndex = board.findIndex((num) => num === cellNumber);
 
-    if (cellIndex === -1 || markedCells.has(cellIndex)) {
+    if (cellIndex === -1 || markedCells.has(cellNumber)) {
       return { isValid: false, cellIndex: -1 };
     }
 
-    markedCells.add(cellIndex);
+    markedCells.add(cellNumber); // Store the cell number, not the index
     return { isValid: true, cellIndex };
   }
 
   /**
    * Check if a player has won (5 bingos = game winner)
    */
-  hasWon(markedCells: Set<number>): boolean {
-    const { totalBingos } = this.checkForBingo(markedCells);
+  hasWon(markedCells: Set<number>, board: number[]): boolean {
+    const { totalBingos } = this.checkForBingo(markedCells, board);
     return totalBingos >= 5;
   }
 

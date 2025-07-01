@@ -191,9 +191,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() gameActionDto: GameActionDto,
   ) {
     try {
+      const playerId = client.data.playerId;
+      const roomId = client.data.roomId;
+
+      if (!playerId || !roomId) {
+        client.emit('move_failed', { error: 'Invalid player or room' });
+        return;
+      }
+
       const result = this.gameService.makeMove(
-        gameActionDto.roomId,
-        gameActionDto.playerId,
+        roomId,
+        playerId,
         gameActionDto.cellNumber,
       );
 
@@ -209,21 +217,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       // Emit move to all players in room
-      this.emitToRoom(gameActionDto.roomId, 'player_move', {
-        playerId: gameActionDto.playerId,
+      this.emitToRoom(roomId, 'player_move', {
+        playerId: playerId,
         cellNumber: gameActionDto.cellNumber,
         bingoAchieved: result.bingoAchieved,
       });
 
       // Check if game is won
       if (result.gameResult) {
-        this.emitToRoom(gameActionDto.roomId, 'game_finished', {
+        this.emitToRoom(roomId, 'game_finished', {
           winner: result.gameResult,
         });
       }
 
       // Send updated room state
-      this.emitRoomUpdate(gameActionDto.roomId);
+      this.emitRoomUpdate(roomId);
     } catch (error) {
       client.emit('move_failed', { error: error.message });
     }
@@ -297,6 +305,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       players: Array.from(room.players.values()).map((player) =>
         this.formatPlayerForClient(player),
       ),
+      winner: room.winner ? this.formatPlayerForClient(room.winner) : null,
     };
   }
 

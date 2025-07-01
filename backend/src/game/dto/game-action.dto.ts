@@ -1,16 +1,8 @@
-import { IsString, IsNotEmpty, IsNumber, Min, Max } from 'class-validator';
+import { IsNumber, Min, Max } from 'class-validator';
 
 export class GameActionDto {
-  @IsString()
-  @IsNotEmpty()
-  roomId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  playerId: string;
-
   @IsNumber()
-  @Min(1)
+  @Min(0) // Allow 0 for FREE space
   @Max(25)
   cellNumber: number;
 }

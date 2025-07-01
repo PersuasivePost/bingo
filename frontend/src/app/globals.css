@@ -24,3 +24,50 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom animations */
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.slide-in-from-right {
+  animation-name: slide-in-from-right;
+}
+
+/* Bingo board animations */
+.bingo-cell {
+  transition: all 0.2s ease-in-out;
+}
+
+.bingo-cell:hover {
+  transform: scale(1.05);
+}
+
+.bingo-cell.marked {
+  animation: mark-cell 0.3s ease-in-out;
+}
+
+@keyframes mark-cell {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    background-color: #fbbf24;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
