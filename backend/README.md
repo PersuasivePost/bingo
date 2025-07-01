@@ -1,98 +1,200 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🎮 Bingo Game Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A real-time multiplayer Bingo game backend built with NestJS, WebSockets, and Socket.IO. Inspired by platforms like scribbl.io, this backend supports room-based gameplay with no authentication required.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Real-time Multiplayer**: WebSocket-based communication for instant gameplay
+- **Room-based System**: Create or join rooms with 2-4 players
+- **Turn-based Gameplay**: Players take turns marking cells on their Bingo boards
+- **Live Game State**: Real-time updates for all players in a room
+- **No Authentication**: Quick join with just a username
+- **Scalable Architecture**: Production-ready modular structure
+- **TypeScript**: Fully typed for better developer experience
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🏗️ Architecture
 
-## Project setup
-
-```bash
-$ yarn install
+```
+src/
+├── bingo/                    # Core Bingo game engine
+│   ├── bingo-engine.service.ts    # Game logic (board generation, win detection)
+│   └── bingo.module.ts
+├── game/                     # Game management
+│   ├── dto/                  # Data Transfer Objects
+│   ├── game.controller.ts    # HTTP API endpoints
+│   ├── game.gateway.ts       # WebSocket events
+│   ├── game.service.ts       # Business logic
+│   └── game.module.ts
+├── common/                   # Shared utilities
+│   ├── interfaces/           # TypeScript interfaces
+│   └── utils/               # Utility functions
+└── main.ts                  # Application entry point
 ```
 
-## Compile and run the project
+## 🎯 Game Rules
+
+1. **Room Creation**: Any player can create a room (becomes the creator)
+2. **Joining**: Players can join existing rooms (max 4 players)
+3. **Starting**: Only room creator can start the game (min 2 players required)
+4. **Gameplay**: Players take turns marking cells on their 5x5 Bingo board
+5. **Winning**: First player to get 5 complete lines (horizontal, vertical, or diagonal) wins
+6. **New Game**: Room creator can reset for another round
+
+## 📡 API Endpoints
+
+### HTTP REST API
 
 ```bash
-# development
-$ yarn run start
+# Health Check
+GET /api/game/health
 
-# watch mode
-$ yarn run start:dev
+# Create Room
+POST /api/game/rooms
+{
+  "roomName": "My Bingo Room",
+  "playerName": "Player1"
+}
 
-# production mode
-$ yarn run start:prod
+# Join Room
+POST /api/game/rooms/join
+{
+  "roomId": "room-uuid",
+  "playerName": "Player2"
+}
+
+# Get Room Info
+GET /api/game/rooms/:roomId
+
+# List All Rooms
+GET /api/game/rooms
 ```
 
-## Run tests
+### WebSocket Events
+
+#### Client → Server Events
+
+- `create_room` - Create a new game room
+- `join_room` - Join an existing room
+- `leave_room` - Leave current room
+- `start_game` - Start the game (creator only)
+- `make_move` - Mark a cell on the board
+- `reset_game` - Reset game for new round (creator only)
+- `get_room_state` - Get current room state
+
+#### Server → Client Events
+
+- `room_created` - Room creation successful
+- `room_joined` - Successfully joined room
+- `player_joined` - Another player joined
+- `player_left` - Player left the room
+- `game_started` - Game has begun
+- `player_move` - Player made a move
+- `game_finished` - Game ended with winner
+- `room_updated` - Room state changed
+- `move_success/move_failed` - Move result
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+
+- Node.js 18+
+- Yarn package manager
+
+### Quick Start
 
 ```bash
-# unit tests
-$ yarn run test
+# Install dependencies
+yarn install
 
-# e2e tests
-$ yarn run test:e2e
+# Start development server
+yarn start:dev
 
-# test coverage
-$ yarn run test:cov
+# Build for production
+yarn build
+
+# Start production server
+yarn start:prod
 ```
 
-## Deployment
+The server will start on `http://localhost:3001`
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🎮 Usage Example
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### JavaScript Client Example
+
+```javascript
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3001');
+
+// Create a room
+socket.emit('create_room', {
+  roomName: 'My Game',
+  playerName: 'Alice',
+});
+
+socket.on('room_created', (data) => {
+  console.log('Room created:', data);
+  // Store roomId and playerId
+});
+
+// Join a room
+socket.emit('join_room', {
+  roomId: 'room-id',
+  playerName: 'Bob',
+});
+
+// Make a move
+socket.emit('make_move', {
+  roomId: 'room-id',
+  playerId: 'player-id',
+  cellNumber: 12,
+});
+
+// Listen for game events
+socket.on('player_move', (data) => {
+  console.log('Player moved:', data);
+});
+
+socket.on('game_finished', (data) => {
+  console.log('Game won by:', data.winner);
+});
+```
+
+## 🏆 Game Flow
+
+1. **Room Creation/Joining**
+   - Player creates room or joins existing one
+   - WebSocket connection established
+   - Room state shared with all players
+
+2. **Game Start**
+   - Creator starts game when ready (2-4 players)
+   - Each player gets a unique 5x5 Bingo board
+   - Turn-based system begins
+
+3. **Gameplay**
+   - Players take turns marking cells
+   - Real-time updates to all players
+   - Win detection after each move
+
+4. **Game End**
+   - Winner announced to all players
+   - Option to play again or leave room
+
+## 🔧 Development
+
+### Available Scripts
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn start:dev      # Development with hot reload
+yarn start:debug    # Debug mode
+yarn build          # Production build
+yarn test           # Run tests
+yarn test:watch     # Test watch mode
+yarn lint           # Code linting
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Ready to play Bingo? Start the server and let the games begin! 🎯**
