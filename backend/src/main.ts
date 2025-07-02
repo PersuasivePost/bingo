@@ -7,7 +7,12 @@ async function bootstrap() {
 
   // Enable CORS for frontend communication
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // Add your frontend URLs
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://bingo-kappa-jade.vercel.app/',
+      'https://*.vercel.app',
+    ], // Add your frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
