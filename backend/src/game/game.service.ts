@@ -25,41 +25,52 @@ export class GameService {
     room: Room;
     player: Player;
   } {
-    const roomId = uuidv4();
-    const playerId = uuidv4();
+    try {
+      this.logger.log(
+        `Creating room with data: ${JSON.stringify(createRoomDto)}`,
+      );
 
-    const board = this.bingoEngine.generateBoard();
-    const markedCells = new Set<number>();
+      const roomId = uuidv4();
+      const playerId = uuidv4();
 
-    const player: Player = {
-      id: playerId,
-      name: createRoomDto.playerName,
-      socketId: '',
-      isReady: false,
-      board: board,
-      markedCells: markedCells,
-      bingoCounts: 0,
-    };
+      const board = this.bingoEngine.generateBoard();
+      const markedCells = new Set<number>();
 
-    const room: Room = {
-      id: roomId,
-      name: createRoomDto.roomName,
-      creatorId: playerId,
-      players: new Map([[playerId, player]]),
-      gameState: GameState.WAITING,
-      currentPlayerIndex: 0,
-      gameStarted: false,
-      maxPlayers: 4,
-      createdAt: new Date(),
-      winner: undefined,
-    };
+      const player: Player = {
+        id: playerId,
+        name: createRoomDto.playerName,
+        socketId: '',
+        isReady: false,
+        board: board,
+        markedCells: markedCells,
+        bingoCounts: 0,
+      };
 
-    this.rooms.set(roomId, room);
-    this.playerToRoom.set(playerId, roomId);
+      const room: Room = {
+        id: roomId,
+        name: createRoomDto.roomName,
+        creatorId: playerId,
+        players: new Map([[playerId, player]]),
+        gameState: GameState.WAITING,
+        currentPlayerIndex: 0,
+        gameStarted: false,
+        maxPlayers: 4,
+        createdAt: new Date(),
+        winner: undefined,
+      };
 
-    this.logger.log(`Room created: ${roomId} by ${createRoomDto.playerName}`);
+      this.rooms.set(roomId, room);
+      this.playerToRoom.set(playerId, roomId);
 
-    return { room, player };
+      this.logger.log(
+        `Room created successfully: ${roomId} by ${createRoomDto.playerName}`,
+      );
+
+      return { room, player };
+    } catch (error) {
+      this.logger.error(`Failed to create room: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   /**

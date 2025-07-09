@@ -30,12 +30,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketInstance = io(
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
-      {
-        transports: ["websocket"],
-      }
-    );
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+    console.log("Connecting to backend:", backendUrl);
+
+    const socketInstance = io(backendUrl, {
+      transports: ["websocket", "polling"],
+      timeout: 20000,
+      forceNew: true,
+    });
 
     socketInstance.on("connect", () => {
       console.log("Connected to server:", socketInstance.connected);

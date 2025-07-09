@@ -10,11 +10,14 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://bingo-kappa-jade.vercel.app/',
+      'http://10.102.36.102:3000',
+      'https://bingo-kappa-jade.vercel.app',
       'https://*.vercel.app',
+      /^https:\/\/.*\.vercel\.app$/,
     ], // Add your frontend URLs
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
 
   // Enable global validation

@@ -187,14 +187,18 @@ export const useGame = () => {
       console.log("Socket connected:", isConnected);
       console.log("Socket instance:", socket?.connected);
 
-      // Add timeout to prevent infinite loading
+      // Add timeout to prevent infinite loading and fallback to REST API
       const timeout = setTimeout(async () => {
-        console.log("WebSocket room creation timed out, trying REST API fallback");
+        console.log(
+          "WebSocket room creation timed out, trying REST API fallback"
+        );
         try {
-          const response = await fetch('http://localhost:3001/api/game/rooms', {
-            method: 'POST',
+          const backendUrl =
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+          const response = await fetch(`${backendUrl}/api/game/rooms`, {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(data),
           });
@@ -205,22 +209,25 @@ export const useGame = () => {
           if (result.success && result.data) {
             setRoom(result.data.room);
             setCurrentPlayer(result.data.player);
-            setGameMessage(`Room "${result.data.room.name}" created successfully!`);
+            setGameMessage(
+              `Room "${result.data.room.name}" created successfully!`
+            );
             setError("");
           } else {
-            setError("Failed to create room via REST API");
+            setError(result.error || "Failed to create room via REST API");
           }
         } catch (err) {
-          setError("Failed to create room");
+          setError("Failed to create room - connection error");
           console.error("REST API error:", err);
         }
         setIsLoading(false);
-      }, 5000); // 5 second timeout for testing
+      }, 3000); // 3 second timeout
 
       // Store timeout to clear it if response comes
       const handleRoomCreated = (responseData: any) => {
         console.log("WebSocket room created response:", responseData);
         clearTimeout(timeout);
+        setIsLoading(false);
       };
 
       socket.once("room_created", handleRoomCreated);
@@ -231,13 +238,87 @@ export const useGame = () => {
   );
 
   const joinRoom = useCallback(
-    (data: JoinRoomData) => {
+    async (data: JoinRoomData) => {
       if (!socket || !isConnected) {
-        setError("Not connected to server");
+        // If socket is not connected, try REST API directly
+        console.log("Socket not connected, trying REST API for join room");
+        try {
+          const backendUrl =
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+          const response = await fetch(`${backendUrl}/api/game/rooms/join`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          console.log("Join room REST API response:", result);
+
+          if (result.success && result.data) {
+            setRoom(result.data.room);
+            setCurrentPlayer(result.data.player);
+            setGameMessage(
+              `Joined room "${result.data.room.name}" successfully!`
+            );
+            setError("");
+          } else {
+            setError(result.error || "Failed to join room via REST API");
+          }
+        } catch (err) {
+          setError("Failed to join room - connection error");
+          console.error("Join room REST API error:", err);
+        }
+        setIsLoading(false);
         return;
       }
+
       setIsLoading(true);
       setError("");
+
+      // Add timeout for WebSocket join room
+      const timeout = setTimeout(async () => {
+        console.log("WebSocket join room timed out, trying REST API fallback");
+        try {
+          const backendUrl =
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+          const response = await fetch(`${backendUrl}/api/game/rooms/join`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+          console.log("Join room REST API response:", result);
+
+          if (result.success && result.data) {
+            setRoom(result.data.room);
+            setCurrentPlayer(result.data.player);
+            setGameMessage(
+              `Joined room "${result.data.room.name}" successfully!`
+            );
+            setError("");
+          } else {
+            setError(result.error || "Failed to join room via REST API");
+          }
+        } catch (err) {
+          setError("Failed to join room - connection error");
+          console.error("Join room REST API error:", err);
+        }
+        setIsLoading(false);
+      }, 3000); // 3 second timeout
+
+      // Store timeout to clear it if response comes
+      const handleRoomJoined = (responseData: any) => {
+        console.log("WebSocket room joined response:", responseData);
+        clearTimeout(timeout);
+        setIsLoading(false);
+      };
+
+      socket.once("room_joined", handleRoomJoined);
       socket.emit("join_room", data);
     },
     [socket, isConnected]

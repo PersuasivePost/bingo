@@ -16,8 +16,14 @@ import { GameActionDto } from './dto/game-action.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://bingo-kappa-jade.vercel.app',
+      /^https:\/\/.*\.vercel\.app$/,
+    ],
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
