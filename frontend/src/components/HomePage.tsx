@@ -113,7 +113,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   placeholder="Enter room name..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
                   required
-                  disabled={isLoading || !isConnected}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -133,7 +133,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   placeholder="Enter your name..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
                   required
-                  disabled={isLoading || !isConnected}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -141,7 +141,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                 type="submit"
                 disabled={
                   isLoading ||
-                  !isConnected ||
                   !createForm.roomName.trim() ||
                   !createForm.playerName.trim()
                 }
@@ -169,13 +168,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                     placeholder="Paste room ID here..."
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
                     required
-                    disabled={isLoading || !isConnected}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={handlePasteRoomId}
                     className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors text-sm font-bold"
-                    disabled={isLoading || !isConnected}
+                    disabled={isLoading}
                     title="Paste from clipboard"
                   >
                     📋
@@ -199,7 +198,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   placeholder="Enter your name..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
                   required
-                  disabled={isLoading || !isConnected}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -207,7 +206,6 @@ export const HomePage: React.FC<HomePageProps> = ({
                 type="submit"
                 disabled={
                   isLoading ||
-                  !isConnected ||
                   !joinForm.roomId.trim() ||
                   !joinForm.playerName.trim()
                 }

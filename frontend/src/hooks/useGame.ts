@@ -177,24 +177,41 @@ export const useGame = () => {
   // Actions
   const createRoom = useCallback(
     async (data: CreateRoomData) => {
-      if (!socket || !isConnected) {
-        setError("Not connected to server");
-        return;
-      }
       setIsLoading(true);
       setError("");
-      console.log("Creating room with data:", data);
-      console.log("Socket connected:", isConnected);
-      console.log("Socket instance:", socket?.connected);
+      console.log("🎯 Creating room with data:", data);
+      console.log("🔌 Socket connected:", isConnected);
+      console.log("📡 Socket instance:", socket?.connected);
 
-      // Add timeout to prevent infinite loading and fallback to REST API
-      const timeout = setTimeout(async () => {
-        console.log(
-          "WebSocket room creation timed out, trying REST API fallback"
-        );
+      // Validate data before sending
+      if (!data.roomName || !data.playerName) {
+        setError("Room name and player name are required");
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.roomName.trim().length < 2) {
+        setError("Room name must be at least 2 characters");
+        setIsLoading(false);
+        return;
+      }
+
+      if (data.playerName.trim().length < 2) {
+        setError("Player name must be at least 2 characters");
+        setIsLoading(false);
+        return;
+      }
+
+      // If socket is not connected or having issues, use REST API directly
+      if (!socket || !isConnected || !socket.connected) {
+        console.log("Socket not available, using REST API directly");
         try {
           const backendUrl =
             process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+          console.log("Sending to backend:", backendUrl);
+          console.log("Data being sent:", JSON.stringify(data, null, 2));
+
           const response = await fetch(`${backendUrl}/api/game/rooms`, {
             method: "POST",
             headers: {
@@ -202,6 +219,17 @@ export const useGame = () => {
             },
             body: JSON.stringify(data),
           });
+
+          console.log("Response status:", response.status);
+          console.log("Response headers:", response.headers);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response body:", errorText);
+            throw new Error(
+              `HTTP error! status: ${response.status}, body: ${errorText}`
+            );
+          }
 
           const result = await response.json();
           console.log("REST API response:", result);
@@ -221,7 +249,61 @@ export const useGame = () => {
           console.error("REST API error:", err);
         }
         setIsLoading(false);
-      }, 3000); // 3 second timeout
+        return;
+      }
+
+      // Try WebSocket first with shorter timeout, then fallback to REST
+      const timeout = setTimeout(async () => {
+        console.log(
+          "WebSocket room creation timed out, trying REST API fallback"
+        );
+        try {
+          const backendUrl =
+            process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
+          console.log("Timeout fallback - sending to backend:", backendUrl);
+          console.log(
+            "Timeout fallback - data being sent:",
+            JSON.stringify(data, null, 2)
+          );
+
+          const response = await fetch(`${backendUrl}/api/game/rooms`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          console.log("Timeout fallback - response status:", response.status);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Timeout fallback - error response body:", errorText);
+            throw new Error(
+              `HTTP error! status: ${response.status}, body: ${errorText}`
+            );
+          }
+
+          const result = await response.json();
+          console.log("REST API response:", result);
+
+          if (result.success && result.data) {
+            setRoom(result.data.room);
+            setCurrentPlayer(result.data.player);
+            setGameMessage(
+              `Room "${result.data.room.name}" created successfully!`
+            );
+            setError("");
+          } else {
+            setError(result.error || "Failed to create room via REST API");
+          }
+        } catch (err) {
+          setError("Failed to create room - connection error");
+          console.error("REST API error:", err);
+        }
+        setIsLoading(false);
+      }, 2000); // Reduced timeout to 2 seconds
 
       // Store timeout to clear it if response comes
       const handleRoomCreated = (responseData: any) => {
@@ -232,7 +314,48 @@ export const useGame = () => {
 
       socket.once("room_created", handleRoomCreated);
 
-      socket.emit("create_room", data);
+      try {
+        socket.emit("create_room", data);
+      } catch (err) {
+        console.error("WebSocket emit error:", err);
+        clearTimeout(timeout);
+        // Immediately try REST API if WebSocket emit fails
+        setTimeout(async () => {
+          try {
+            const backendUrl =
+              process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+            const response = await fetch(`${backendUrl}/api/game/rooms`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("REST API response after WS error:", result);
+
+            if (result.success && result.data) {
+              setRoom(result.data.room);
+              setCurrentPlayer(result.data.player);
+              setGameMessage(
+                `Room "${result.data.room.name}" created successfully!`
+              );
+              setError("");
+            } else {
+              setError(result.error || "Failed to create room");
+            }
+          } catch (restErr) {
+            setError("Failed to create room - all methods failed");
+            console.error("REST API error after WS failure:", restErr);
+          }
+          setIsLoading(false);
+        }, 100);
+      }
     },
     [socket, isConnected]
   );

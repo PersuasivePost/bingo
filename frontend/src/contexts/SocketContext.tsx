@@ -35,25 +35,43 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     console.log("Connecting to backend:", backendUrl);
 
     const socketInstance = io(backendUrl, {
-      transports: ["websocket", "polling"],
+      transports: ["polling", "websocket"], // Try polling first, then websocket
       timeout: 20000,
       forceNew: true,
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000,
     });
 
     socketInstance.on("connect", () => {
-      console.log("Connected to server:", socketInstance.connected);
+      console.log("✅ Connected to server:", socketInstance.connected);
       console.log("Socket ID:", socketInstance.id);
+      console.log("Transport:", socketInstance.io.engine.transport.name);
       setIsConnected(true);
     });
 
-    socketInstance.on("disconnect", () => {
-      console.log("Disconnected from server");
+    socketInstance.on("disconnect", (reason) => {
+      console.log("❌ Disconnected from server. Reason:", reason);
       setIsConnected(false);
     });
 
     socketInstance.on("connect_error", (error) => {
-      console.error("Connection error:", error);
+      console.error("🔥 Connection error:", error.message || error);
       setIsConnected(false);
+    });
+
+    socketInstance.io.on("error", (error) => {
+      console.error("🔥 Socket.IO error:", error);
+    });
+
+    // Add additional debugging
+    socketInstance.on("reconnect", (attemptNumber) => {
+      console.log("🔄 Reconnected after", attemptNumber, "attempts");
+    });
+
+    socketInstance.on("reconnect_error", (error) => {
+      console.error("🔄❌ Reconnection failed:", error);
     });
 
     setSocket(socketInstance);
