@@ -5,18 +5,11 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for frontend communication
+  // Enable CORS for frontend communication (echo origin for Socket.IO polling requests)
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://10.102.36.102:3000',
-      'https://bingo-kappa-jade.vercel.app',
-      'https://*.vercel.app',
-      /^https:\/\/.*\.vercel\.app$/,
-    ], // Add your frontend URLs
+    origin: true, // reflect request origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
     credentials: true,
   });
 
